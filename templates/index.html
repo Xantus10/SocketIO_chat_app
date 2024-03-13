@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block childCSS %}<link rel="stylesheet" href='{{ url_for("static", filename="styles/index.css") }}'>
+<script src='{{ url_for("static", filename="scripts/index.js") }}'></script>{% endblock %}
+{% block content %}
+<h1>Welcome to chat app</h1>
+{% if error %}
+<p id="error">{{error}}</p>
+{% endif %}
+<form action="/" method="post">
+  <label for="name">Enter your name: </label>
+  <input type="text" id="name" name="name" placeholder="Name"><br>
+  <label for="join">Join an existing room? </label>
+  <input type="checkbox" name="join" id="join" value="yes" onclick="showCode()"><br>
+  <label for="code" id="codelabel" style="display: none;">Code: </label>
+  <input type="text" id="code" name="code" placeholder="eg. eb7f51" style="display: none;"><br>
+  <input type="submit">
+</form>
+{% endblock %}
