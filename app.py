@@ -19,6 +19,43 @@ def getRoomCode():
       return code
 
 
+@socketioApp.on("connect")
+def io_connect():
+  name = session.get('name')
+  code = session.get('room')
+  if name is None or code is None:
+    return
+  if not code in chatrooms:
+    leave_room(code)
+  join_room(code)
+  send(f"{name} has joined the room!", to=code)
+  chatrooms[code]['members'] += 1
+  chatrooms[code]['messages'].append(f"{name} has joined the room!")
+
+
+@socketioApp.on("message")
+def io_message(msg):
+  name = session.get('name')
+  code = session.get('room')
+  if name is None or code is None or not code in chatrooms:
+    return
+  message = f'{name}: {msg["message"]}'
+  send(message, to=code)
+  chatrooms[code]['messages'].append(message)
+
+
+@socketioApp.on("disconnect")
+def io_disconnect():
+  name = session.get('name')
+  code = session.get('room')
+  leave_room(code)
+  if code in chatrooms:
+    chatrooms[code]['members'] -= 1
+    if chatrooms[code]['members'] <= 0:
+      del chatrooms[code]
+    send(f'{name} has left the chat!', to=code)
+
+
 @app.route('/chat')
 def chat():
   name = session.get('name')
