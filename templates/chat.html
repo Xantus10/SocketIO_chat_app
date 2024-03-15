@@ -3,15 +3,19 @@
 <script src='{{ url_for("static", filename="scripts/chat.js") }}'></script>{% endblock %}
 {% block content %}
 <h1>Chat</h1>
-<p>Room code: {{room}}</p>
-<ul id="messageUL">
-{% for mes in messages %}
-<script>
-  createChatLine("{{mes}}");
-</script>
-{% endfor %}
-</ul>
-<label for="message">{{name}} &gt;</label>
-<input type="text" name="message" id="message">
-<button type="submit" onclick="sendMessage();">Send!</button>
+<p id="roomcode">Room code: {{room}}</p>
+<div class="messageContainer">
+  <ul id="messageUL">
+    {% for mes in messages %}
+      <script>
+        createChatLine("{{mes}}");
+      </script>
+    {% endfor %}
+  </ul>
+</div>
+<div class="inputContainer">
+  <label for="message">{{name}}:</label>
+  <input type="text" name="message" id="message">
+  <button type="submit" id="submitButton" onclick="sendMessage();">Send!</button>
+</div>
 {% endblock %}

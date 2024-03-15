@@ -1,0 +1,96 @@
+ul {
+  list-style-type: none;
+  padding: 10px;
+}
+
+div.container {
+  gap: 30px;
+}
+
+li {
+  margin-top: 3px;
+  margin-bottom: 3px;
+}
+
+div.inputContainer {
+  width: 100%;
+  flex: 1;
+  margin-bottom: 10px;
+}
+
+div.messageContainer {
+  width: 80%;
+  flex: 26;
+  margin: auto;
+  border: 1px black solid;
+  background-color: rgb(200, 200, 200);
+}
+
+input[type="text"] {
+  width: 70%;
+  height: 30px;
+  padding: 3px;
+}
+
+input[type="submit"] {
+  width: 150px;
+  height: 30px;
+  color: whitesmoke;
+  background-color: green;
+}
+
+input[type="submit"]:hover {
+  background-color: rgb(0, 150, 0);
+}
+
+label {
+  padding: 5px;
+  border: 1px black solid;
+  border-radius: 5px;
+  background-color: rgb(100, 116, 255);
+  font-weight: 500;
+}
+
+#roomcode {
+  position: fixed;
+  bottom: 70px;
+  left: 50px;
+}
+
+@media (max-width: 800px) {
+  div.container {
+    width: 70%;
+    gap: 20px;
+  }
+
+  div.messageContainer {
+    width: 90%;
+  }
+
+  #roomcode {
+    position: absolute;
+    bottom: none;
+    left: 15px;
+    top: 55px;
+  }
+}
+
+@media (max-width: 600px) {
+  div.container {
+    width: 90%;
+    gap: 20px;
+  }
+
+  div.messageContainer {
+    width: 95%;
+  }
+
+  input[type="text"] {
+    width: 60%;
+  }
+  
+  label {
+    padding: 3px;
+    font-size: 14px;
+  }
+}

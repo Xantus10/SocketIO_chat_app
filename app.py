@@ -20,7 +20,7 @@ def getRoomCode():
 
 
 @socketioApp.on("connect")
-def io_connect():
+def io_connect(_):
   name = session.get('name')
   code = session.get('room')
   if name is None or code is None:
@@ -96,7 +96,7 @@ def index():
 
 
 def main():
-  socketioApp.run(app, port=80)
+  socketioApp.run(app, port=5000, host='0.0.0.0')
 
 
 if __name__ == '__main__':
