@@ -3,9 +3,9 @@ var socketIO = io();
 
 
 // Recieving a message
-socketIO.on("message", function (message) {createChatLine(message);});
-function createChatLine(message) {
-  document.getElementById("messageUL").innerHTML += `<li><p>${message}</p></li>`;
+socketIO.on("message", function (message) {createChatLine(message.sender, message.message);});
+function createChatLine(sender, message) {
+  document.getElementById("messageUL").innerHTML += `<li><p>${sender}${(sender === "") ? "[O] " : ": "}${message}</p></li>`;
   window.scrollTo(0, document.body.scrollHeight);
 }
 
