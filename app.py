@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, send_from_directory, redirect
 from flask_socketio import SocketIO, join_room, leave_room, send
 from os import path
 from secrets import token_hex
+from datetime import datetime
 
 
 app = Flask(__name__)
@@ -19,6 +20,10 @@ def getRoomCode():
       return code
 
 
+def createMessage(sender='', message=''):
+  return {'sender': sender, 'message': message, 'time': datetime.now().strftime('%H:%M')}
+
+
 @socketioApp.on("connect")
 def io_connect(_):
   name = session.get('name')
@@ -28,7 +33,7 @@ def io_connect(_):
   if not code in chatrooms:
     leave_room(code)
   join_room(code)
-  msg = {'sender': '', 'message': f"{name} has joined the room!"}
+  msg = createMessage('', f"{name} has joined the room!")
   send(msg, to=code)
   chatrooms[code]['members'] += 1
   chatrooms[code]['messages'].append(msg)
@@ -40,7 +45,7 @@ def io_message(message):
   code = session.get('room')
   if name is None or code is None or not code in chatrooms:
     return
-  msg = {'sender': name, 'message': message['message']}
+  msg = createMessage(name, message['message'])
   send(msg, to=code)
   chatrooms[code]['messages'].append(msg)
 
@@ -52,7 +57,7 @@ def io_disconnect():
   leave_room(code)
   if code in chatrooms:
     chatrooms[code]['members'] -= 1
-    msg = {'sender': '', 'message': f"{name} has left the room!"}
+    msg = createMessage('', f"{name} has left the room!")
     send(msg, to=code)
     chatrooms[code]['messages'].append(msg)
     if chatrooms[code]['members'] <= 0:

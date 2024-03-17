@@ -16,6 +16,10 @@ div.inputContainer {
   width: 100%;
   flex: 1;
   margin-bottom: 10px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
 }
 
 div.messageContainer {
@@ -24,6 +28,11 @@ div.messageContainer {
   margin: auto;
   border: 1px black solid;
   background-color: rgb(200, 200, 200);
+}
+
+p.smalltime {
+  color: rgb(44, 44, 44);
+  font-size: 11px;
 }
 
 input[type="text"] {
@@ -57,9 +66,9 @@ label {
   left: 50px;
 }
 
-@media (max-width: 800px) {
+@media (max-width: 1000px) {
   div.container {
-    width: 70%;
+    width: 75%;
     gap: 20px;
   }
 
@@ -71,7 +80,7 @@ label {
     position: absolute;
     bottom: none;
     left: 15px;
-    top: 55px;
+    top: 65px;
   }
 }
 
