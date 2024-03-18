@@ -4,6 +4,10 @@
 {% block content %}
 <h1>Chat</h1>
 <p id="roomcode">Room code: {{room}}</p>
+<div id="online">
+  <p>People online: </p>
+  <p id="onlineCount">{{personCount}}</p>
+</div>
 <div class="messageContainer">
   <ul id="messageUL">
     {% for mes in messages %}

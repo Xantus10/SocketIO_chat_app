@@ -1,5 +1,5 @@
 from flask import Flask, render_template, request, send_from_directory, redirect, session
-from flask_socketio import SocketIO, join_room, leave_room, send
+from flask_socketio import SocketIO, join_room, leave_room, send, emit
 from os import path
 from secrets import token_hex
 from datetime import datetime
@@ -35,6 +35,7 @@ def io_connect(_):
   join_room(code)
   msg = createMessage('', f"{name} has joined the room!")
   send(msg, to=code)
+  emit("Dis/Connect", {'change': "+"}, to=code)
   chatrooms[code]['members'] += 1
   chatrooms[code]['messages'].append(msg)
 
@@ -59,6 +60,7 @@ def io_disconnect():
     chatrooms[code]['members'] -= 1
     msg = createMessage('', f"{name} has left the room!")
     send(msg, to=code)
+    emit("Dis/Connect", {'change': "-"}, to=code)
     chatrooms[code]['messages'].append(msg)
     if chatrooms[code]['members'] <= 0:
       del chatrooms[code]
@@ -70,7 +72,7 @@ def chat():
   code = session.get('room')
   if not name or not code or not code in chatrooms:
     return redirect('/')
-  return render_template('chat.html', name=name, room=code, messages=chatrooms[code]['messages'])
+  return render_template('chat.html', name=name, room=code, messages=chatrooms[code]['messages'], personCount=chatrooms[code]['members']) # possibly add 1
 
 
 @app.route('/favicon.ico')

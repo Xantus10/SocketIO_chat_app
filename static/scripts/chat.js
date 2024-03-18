@@ -11,6 +11,21 @@ function createChatLine(sender, message, time) {
   window.scrollTo(0, document.body.scrollHeight);
 }
 
+
+// Person dis/connect count
+socketIO.on("Dis/Connect", function (change) {changePersonCount(change.change)});
+function changePersonCount(change) {
+  let num = parseInt(document.getElementById("onlineCount").innerHTML);
+  console.log(change);
+  if (change === "+") {
+    num++;
+  } else {
+    num--;
+  }
+  document.getElementById("onlineCount").innerHTML = num;
+}
+
+
 // Sending a message
 function sendMessage() {
   let msg = document.getElementById("message");

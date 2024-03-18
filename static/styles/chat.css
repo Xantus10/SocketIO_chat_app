@@ -66,6 +66,15 @@ label {
   left: 50px;
 }
 
+#online {
+  position: fixed;
+  right: 40px;
+  top: 90px;
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+}
+
 @media (max-width: 1000px) {
   div.container {
     width: 75%;
@@ -81,6 +90,17 @@ label {
     bottom: none;
     left: 15px;
     top: 65px;
+  }
+
+  #online {
+    right: 5px;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: 14px;
+  }
+
+  #onlineCount {
+    font-size: 16px;
   }
 }
 
@@ -100,6 +120,17 @@ label {
   
   label {
     padding: 3px;
+    font-size: 14px;
+  }
+
+  #online {
+    right: 30px;
+    flex-direction: row;
+    align-items: center;
+    position: absolute;
+  }
+
+  #onlineCount {
     font-size: 14px;
   }
 }
