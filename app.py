@@ -4,6 +4,7 @@ from os import path
 from secrets import token_hex
 from datetime import datetime
 
+import dbHandler
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vn^F8t*#klq3P0(mE6W{9!`l>GU5N$e8'
@@ -21,7 +22,7 @@ def getRoomCode():
 
 
 def createMessage(sender='', message=''):
-  return {'sender': sender, 'message': message, 'time': datetime.now().strftime('%H:%M')}
+  return {'sender': sender, 'message': message, 'time': datetime.now().strftime('%-d. %-m. %Y %H:%M')}
 
 
 @socketioApp.on("connect")
