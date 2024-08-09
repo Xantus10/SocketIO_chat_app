@@ -5,12 +5,12 @@ from secrets import token_hex
 from logs import Logger
 logger = Logger()
 
-dbLocation = 'data/database.db'
+DBLOCATION = 'data/database.db'
 
 # Initialize all database tables
 def initialize():
   try:
-    db = sqlite3.connect('data/database.db')
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
     # Table for users
     cursor.execute('CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, salt TEXT NOT NULL, password TEXT NOT NULL, privilegeLevel INT NOT NULL);')
@@ -51,7 +51,7 @@ def checkHashedPassword(password: str, salt: str, checkHash: str):
 # Log in a user; returns id (if fail -> id = -1)
 def logInUser(username, password):
   try:
-    db = sqlite3.connect(dbLocation)
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
     # Get id, salt and password of a username
     account = cursor.execute('SELECT id, salt, password FROM users WHERE username = ?;', (username,))
@@ -76,7 +76,7 @@ def logInUser(username, password):
 # Get a privLevel associated with userId, returns privLevel (or -1 if fail)
 def getUserPrivilege(ix):
   try:
-    db = sqlite3.connect(dbLocation)
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
     res1 = cursor.execute('SELECT privilegeLevel FROM users WHERE id = ?;', (ix,))
     res1 = res1.fetchone()
@@ -95,7 +95,7 @@ def getUserPrivilege(ix):
 # Return True if Username was found in table
 def checkIfUsernameExists(username):
   try:
-    db = sqlite3.connect(dbLocation)
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
     # If username is in users
     res1 = cursor.execute('SELECT * FROM users WHERE username = ?;', (username,))
@@ -114,7 +114,7 @@ def checkIfUsernameExists(username):
 
 def addUser(username, password, privilegeLevel):
   try:
-    db = sqlite3.connect(dbLocation)
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
     # Hash the password
     salt, hashed = hashPassword(password)
@@ -133,7 +133,7 @@ def addUser(username, password, privilegeLevel):
 # Change targets privilege level
 def changePrivLevel(ix, privLevel):
   try:
-    db = sqlite3.connect(dbLocation)
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
     # Change the privilegeLevel
     cursor.execute('UPDATE users SET privilegeLevel=? WHERE id = ?;', (privLevel, ix))
@@ -146,14 +146,17 @@ def changePrivLevel(ix, privLevel):
 
 
 # Remove a user
-def removeUser(ix):
+def removeUser(ix: int):
   try:
-    db = sqlite3.connect(dbLocation)
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
     # Find a user
     user = cursor.execute('SELECT username FROM users WHERE id = ?;', (ix,))
     user = user.fetchone()
     if user:
+      # First remove userServer rels.
+      cursor.execute('DELETE FROM userServerMember WHERE userId = ?', (ix))
+      # Then remove user
       cursor.execute('DELETE FROM users WHERE id = ?', (ix,))
     else:
       # If we were unable to find the id in users, we log it as a warning
@@ -173,7 +176,7 @@ def addServer(name: str, roomcode: str):
     if (checkIfCodeExists(roomcode)):
       logger.log(f'Roomcode {roomcode} already exists!', 2)
       return False
-    db = sqlite3.connect('data/database.db')
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
     # Table for users
     cursor.execute('INSERT INTO servers(name, code) VALUES(?, ?);', (name, roomcode))
@@ -187,7 +190,7 @@ def addServer(name: str, roomcode: str):
 
 def checkIfCodeExists(roomcode: str):
   try:
-    db = sqlite3.connect('data/database.db')
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
     # Table for users
     res = cursor.execute('SELECT * FROM servers WHERE code = ?', (roomcode,))
@@ -206,13 +209,16 @@ def checkIfCodeExists(roomcode: str):
 
 def removeServer(roomcode: str):
   try:
-    db = sqlite3.connect('data/database.db')
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
-    # Find a user
-    srv = cursor.execute('SELECT * FROM servers WHERE code = ?;', (roomcode,))
-    srv = srv.fetchone()
-    if srv:
-      cursor.execute('DELETE FROM servers WHERE code = ?', (roomcode,))
+    six = getServerId(roomcode)
+    if six != -1:
+      # 1st remove all messages
+      cursor.execute('DELETE FROM messages WHERE serverId = ?', (six,))
+      # Then remove all user-server rels.
+      cursor.execute('DELETE FROM userServerRelations WHERE serverId = ?', (six,))
+      # Finally remove server
+      cursor.execute('DELETE FROM servers WHERE id = ?', (six,))
     else:
       # If we were unable to find the code in servers, we log it as a warning
       logger.log(f'Recieved remove request for code({roomcode}), however requested row is not present in servers table, aborting...', 2)
@@ -226,9 +232,8 @@ def removeServer(roomcode: str):
 
 def getServerInfo(roomcode: str):
   try:
-    db = sqlite3.connect('data/database.db')
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
-    # Table for users
     res = cursor.execute('SELECT id, name FROM servers WHERE code = ?', (roomcode,))
     res = res.fetchone()
     db.commit()
@@ -237,25 +242,44 @@ def getServerInfo(roomcode: str):
     logger.log(f'Server id for {roomcode} not present!')
     return -1, ''
   except sqlite3.Error as e:
-    logger.log(f'An error in SQL syntax occurred while getting serverId; Error message: {e}')
+    logger.log(f'An error in SQL syntax occurred while getting serverId name; Error message: {e}')
   except Exception as e:
-    logger.log(f'An unexpected error occurred while getting serverId; Error message: {e}')
+    logger.log(f'An unexpected error occurred while getting serverId name; Error message: {e}')
   db.commit()
   return -1, ''
 
 
+def getServerId(roomcode: str):
+  try:
+    db = sqlite3.connect(DBLOCATION)
+    cursor = db.cursor()
+    res = cursor.execute('SELECT id FROM servers WHERE code = ?', (roomcode,))
+    res = res.fetchone()
+    db.commit()
+    if res:
+      return res[0]
+    logger.log(f'Server id for {roomcode} not present!')
+    return -1
+  except sqlite3.Error as e:
+    logger.log(f'An error in SQL syntax occurred while getting serverId; Error message: {e}')
+  except Exception as e:
+    logger.log(f'An unexpected error occurred while getting serverId; Error message: {e}')
+  db.commit()
+  return -1
+
+
 def handleExcessiveMessages(serverix: int):
   try:
-    db = sqlite3.connect('data/database.db')
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
     res = cursor.execute('SELECT id FROM messages WHERE serverId = ? ORDER BY id ASC;', (serverix,))
     res = res.fetchall()
     if len(res) > 100:
       cursor.execute('DELETE FROM messages WHERE id = ?', (res[0][0],))
   except sqlite3.Error as e:
-    logger.log(f'An error in SQL syntax occurred while adding message; Error message: {e}')
+    logger.log(f'An error in SQL syntax occurred while handling exc message; Error message: {e}')
   except Exception as e:
-    logger.log(f'An unexpected error occurred while adding message; Error message: {e}')
+    logger.log(f'An unexpected error occurred while handling exc message; Error message: {e}')
   db.commit()
   return True
 
@@ -266,9 +290,9 @@ def addMessage(roomcode: str, message: dict):
     if (not checkIfCodeExists(roomcode)):
       logger.log(f'Roomcode {roomcode} not present!', 2)
       return False
-    db = sqlite3.connect('data/database.db')
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
-    ix = getServerInfo(roomcode)[0]
+    ix = getServerId(roomcode)
     cursor.execute('INSERT INTO messages(message, sender, time, serverId) VALUES(?, ?, ?, ?);', (message['message'], message['sender'], message['time'], ix))
   except sqlite3.Error as e:
     logger.log(f'An error in SQL syntax occurred while adding message; Error message: {e}')
@@ -283,9 +307,9 @@ def getMessages(roomcode: str):
     if (not checkIfCodeExists(roomcode)):
       logger.log(f'Roomcode {roomcode} not present!', 2)
       return False
-    db = sqlite3.connect('data/database.db')
+    db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
-    ix = getServerInfo(roomcode)[0]
+    ix = getServerId(roomcode)
     res = cursor.execute('SELECT message, sender, time FROM messages WHERE serverId = ? ORDER BY id ASC;', (ix,))
     res = res.fetchall()
     db.commit()
@@ -299,9 +323,61 @@ def getMessages(roomcode: str):
   db.commit()
   return []
 
+
+def userJoinServer(uix: int, roomcode: str):
+  try:
+    if (not checkIfCodeExists(roomcode)):
+      logger.log(f'Roomcode {roomcode} not present!', 2)
+      return False
+    db = sqlite3.connect(DBLOCATION)
+    cursor = db.cursor()
+    six = getServerId(roomcode)
+    if not isUserInServer(uix, six):
+      cursor.execute('INSERT INTO userServerMember(userId, serverId) VALUES (?, ?))', (uix, six))
+  except sqlite3.Error as e:
+    logger.log(f'An error in SQL syntax occurred while user({uix}) tried joining server({six}); Error message: {e}')
+  except Exception as e:
+    logger.log(f'An unexpected error occurred while user({uix}) tried joining server({six}); Error message: {e}')
+  db.commit()
+  return True
+
+
+def userLeaveServer(uix: int, roomcode: str):
+  try:
+    db = sqlite3.connect(DBLOCATION)
+    cursor = db.cursor()
+    six = getServerId(roomcode)
+    if isUserInServer(uix, six):
+      cursor.execute('DELETE FROM userServerMember WHERE userId = ? AND serverId = ?', (uix, six))
+  except sqlite3.Error as e:
+    logger.log(f'An error in SQL syntax occurred while removing user server relation; Error message: {e}; Data: {(uix, roomcode)}')
+  except Exception as e:
+    logger.log(f'An unexpected error occurred while removing user server relation; Error message: {e}')
+  db.commit()
+  return True
+
+
+def isUserInServer(uix: int, six: str):
+  try:
+    db = sqlite3.connect(DBLOCATION)
+    cursor = db.cursor()
+    # If username is in users
+    res1 = cursor.execute('SELECT id FROM userServerMember WHERE userId = ? AND serverId = ?;', (uix, six))
+    res1 = res1.fetchall()
+    db.commit()
+    if res1:
+      return True
+    return False
+  except sqlite3.Error as e:
+    logger.log(f'An error in SQL syntax occurred while checking if a user server relation already exists; Error message: {e}; Data: {(uix, six)}')
+  except Exception as e:
+    logger.log(f'An unexpected error occurred while checking if a user server relation already exists; Error message: {e}')
+  db.commit()
+  return True
+
 #REMOVE FROM FINAL VERSION
 def selectall(): # Used for displaying data REMOVE FROM FINAL VERSION
-  db = sqlite3.connect('data/database.db') #REMOVE FROM FINAL VERSION
+  db = sqlite3.connect(DBLOCATION) #REMOVE FROM FINAL VERSION
   cursor = db.cursor()#REMOVE FROM FINAL VERSION
   res1 = cursor.execute('SELECT * FROM users;')#REMOVE FROM FINAL VERSION
   res1 = res1.fetchall()#REMOVE FROM FINAL VERSION
