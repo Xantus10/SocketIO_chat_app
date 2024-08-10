@@ -49,7 +49,7 @@ def checkHashedPassword(password: str, salt: str, checkHash: str):
 
 
 # Log in a user; returns id (if fail -> id = -1)
-def logInUser(username, password):
+def logInUser(username: str, password: str):
   try:
     db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
@@ -74,7 +74,7 @@ def logInUser(username, password):
 
 
 # Get a privLevel associated with userId, returns privLevel (or -1 if fail)
-def getUserPrivilege(ix):
+def getUserPrivilege(ix: int):
   try:
     db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
@@ -93,7 +93,7 @@ def getUserPrivilege(ix):
 
 
 # Return True if Username was found in table
-def checkIfUsernameExists(username):
+def checkIfUsernameExists(username: str):
   try:
     db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
@@ -112,7 +112,7 @@ def checkIfUsernameExists(username):
   return True
 
 
-def addUser(username, password, privilegeLevel):
+def addUser(username: str, password: str, privilegeLevel=0):
   try:
     db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
@@ -131,7 +131,7 @@ def addUser(username, password, privilegeLevel):
 
 
 # Change targets privilege level
-def changePrivLevel(ix, privLevel):
+def changePrivLevel(ix :int, privLevel: int):
   try:
     db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()

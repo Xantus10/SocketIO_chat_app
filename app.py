@@ -1,14 +1,18 @@
-from flask import Flask, render_template, request, send_from_directory, redirect, session
+from flask import Flask, render_template, request, send_from_directory, redirect, session, make_response
 from flask_socketio import SocketIO, join_room, leave_room, send, emit
 from os import path
 from secrets import token_hex
 from datetime import datetime
+from random import randint
 
 import dbHandler
+from MyJWT import JWT
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vn^F8t*#klq3P0(mE6W{9!`l>GU5N$e8'
 socketioApp  = SocketIO(app)
+myjwt = JWT()
+myjwt.set_secret_key('N*YV$%NY*#4vJWKRQOcnqvb3v$N37]85n&#583?vNT583#`Yv83')
 
 
 chatrooms = {}
@@ -23,6 +27,12 @@ def getRoomCode():
 
 def createMessage(sender='', message=''):
   return {'sender': sender, 'message': message, 'time': datetime.now().strftime('%-d. %-m. %Y %H:%M')}
+
+
+def checkCaptcha(captchaNum: int, captchaInp: str):
+  with open('static/captcha/captcha.txt', 'r') as f:
+    content = f.read().split('\n')
+  return content[captchaNum-1] == captchaInp
 
 
 @socketioApp.on("connect")
@@ -67,6 +77,49 @@ def io_disconnect():
       del chatrooms[code]
 
 
+# Used on sign page to check for username
+@socketioApp.on("usernameInUse")
+def io_checkUsernameInUse(data):
+  rep = 'Y' if dbHandler.checkIfUsernameExists(data['username']) else 'N'
+  emit("usernameInUseReply", {'status': rep})
+
+
+@app.route('/sign')
+def signuporin():
+  e = request.args.get('e')
+  return render_template('registerlogin.html', captcha=randint(1, 10), error=e if e else '')
+
+
+@app.route('/register', methods=['POST'])
+def register():
+  username = request.form.get('name')
+  password = request.form.get('password')
+  check = request.form.get('check')
+  captcha = request.form.get('captcha')
+  captchainp = request.form.get('captchainp')
+  if dbHandler.checkIfUsernameExists(username): return redirect('/sign?e=Username already in use')
+  if len(password) < 8: return redirect('/sign?e=Password must be at least 8 characters')
+  if check != password: return redirect('/sign?e=Passwords don\'t match')
+  if not checkCaptcha(int(captcha), captchainp): return redirect('/sign?e=Invalid captcha')
+  # Now we can register the user
+  dbHandler.addUser(username, password)
+  return redirect('/sign?e=Great! Now log in')
+
+
+@app.route('/login', methods=['POST'])
+def login():
+  username = request.form.get('name')
+  password = request.form.get('password')
+  uix = dbHandler.logInUser(username, password)
+  if uix == -1: return redirect('/sign?e=Incorrect username or password')
+  resp = make_response(redirect('/'))
+  data = {'uix': uix}
+  JWT_token, JWT_user_context = myjwt.jwtencode(data)
+  resp.set_cookie('JWT_token', JWT_token)
+  resp.set_cookie('JWT_user_context', JWT_user_context, httponly=True, samesite='Strict')
+  return resp
+
+
 @app.route('/chat')
 def chat():
   name = session.get('name')
@@ -83,8 +136,12 @@ def favicon():
 
 @app.route('/', methods=['GET', 'POST'])
 def index():
-  session.clear()
   if request.method == 'GET':
+    JWT_token = request.cookies.get('JWT_token')
+    JWT_user_context = request.cookies.get('JWT_user_context')
+    if JWT_token is None or JWT_user_context is None:
+      return redirect('/sign')
+    i, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
     return render_template('index.html')
   else:
     name = request.form.get('name')
@@ -107,6 +164,7 @@ def index():
 
 
 def main():
+  dbHandler.initialize()
   socketioApp.run(app, port=5000, host='0.0.0.0')
 
 

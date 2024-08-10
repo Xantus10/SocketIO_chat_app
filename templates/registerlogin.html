@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block childCSS %}<link rel="stylesheet" href='{{ url_for("static", filename="styles/registerlogin.css") }}'>
+<script src='{{ url_for("static", filename="scripts/registerlogin.js") }}'></script>{% endblock %}
+{% block content %}
+<h1>Welcome to chat app</h1>
+{% if error %}
+<p id="error">{{error}}</p>
+{% endif %}
+<div class="forms-side">
+  <form action="/login" method="post">
+    <label for="name">Username: </label>
+    <input type="text" id="lname" name="name" placeholder="Username"><br>
+    <label for="name">Password: </label>
+    <input type="password" id="lpassword" name="password" placeholder="*****"><br>
+    <input type="submit" value="Login">
+  </form>
+  <form action="/register" method="post">
+    <label for="name">Username: </label>
+    <input type="text" id="name" name="name" placeholder="Username" onchange="usernameInUse();"><br>
+    <label for="name">Password: </label>
+    <input type="password" id="password" name="password" placeholder="*****" onchange="passwordCheck();"><br>
+    <label for="name">Password again: </label>
+    <input type="password" id="check" name="check" placeholder="*****" onchange="passwordCheck();"><br>
+    <img src='{{ url_for("static", filename="captcha/" + (captcha|string) + ".jpg") }}' alt="captcha">
+    <input type="hidden" name="captcha" id="captcha" value="{{captcha}}">
+    <input type="text" name="captchainp" id="captchainp" placeholder="Enter code from captcha image">
+    <p id="passp" style="display: none;"></p>
+    <input type="submit" value="Register">
+  </form>
+</div>
+{% endblock %}

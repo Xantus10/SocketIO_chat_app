@@ -45,6 +45,10 @@ class JWT:
     return True, data
 
 
+  def set_secret_key(self, key: str):
+    self.JWT_DATA['SECRET_KEY'] = key
+
+
 ##j = JWT()
 ##j.JWT_DATA['SECRET_KEY'] = 'aaaa'
 ##t, uc = j.jwtencode({'name': 'user123', 'priv': 2})
