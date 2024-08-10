@@ -9,7 +9,7 @@ class Logger:
     self.CONFIG['LOG_LEVEL'] = 0
 
   # 1-3 for Message (*), Warning (#), Error (!)
-  def log(msg: str, ptype=3):
+  def log(self, msg: str, ptype=3):
     try:
       if ptype < self.CONFIG['LOG_LEVEL']: return
       # Identificators for messages ([*], [!], etc.)
