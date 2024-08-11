@@ -32,6 +32,7 @@ class JWT:
 
   # Decode and validate jwt token; return bool_isValid,dict_data
   def jwtdecode(self, token: str, user_context: str):
+    if not token or not user_context: return False, {'fail_msg': 'None values'}
     data, sig = token.split('.')
     data = b64decode(data.encode('utf-8')).decode('utf-8')
     sig = b64decode(sig.encode('utf-8')).decode('utf-8')
