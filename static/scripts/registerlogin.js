@@ -1,4 +1,4 @@
-var socketIO = io();/////////////////////////////////////////////// EVERYTHIN EXPERIMANTAL
+var socketIO = io();
 
 function usernameInUse() {
   let msg = document.getElementById("name");
