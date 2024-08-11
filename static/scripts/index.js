@@ -1,11 +1,15 @@
-function showCode() {
-  let code = document.getElementById('code');
-  let codelabel = document.getElementById('codelabel');
-  if (code.style.display != 'none') {
-    code.style.display = 'none';
-    codelabel.style.display = 'none';
-  } else {
-    code.style.display = 'inline-block';
-    codelabel.style.display = 'inline-block';
-  }
+var socketIO = io();
+
+function codeInUse() {
+  let msg = document.getElementById("code");
+  if (msg.value === "") return;
+  socketIO.emit("codeInUse", {code: msg.value});
 }
+
+socketIO.on("codeInUseReply", function (rep) {
+  if (rep.status === "Y") {
+    document.getElementById("code").style.backgroundColor = "lightcoral";
+  } else {
+    document.getElementById("code").style.backgroundColor = "lightgreen";
+  }
+});

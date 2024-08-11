@@ -84,14 +84,21 @@ def io_checkUsernameInUse(data):
   emit("usernameInUseReply", {'status': rep})
 
 
+# Used on index page to check for code in server creation
+@socketioApp.on("codeInUse")
+def io_checkCodeInUse(data):
+  rep = 'Y' if dbHandler.checkIfCodeExists(data['code']) else 'N'
+  emit("codeInUseReply", {'status': rep})
+
+
 @app.route('/sign')
-def signuporin():
+def flask_signuporin():
   e = request.args.get('e')
   return render_template('registerlogin.html', captcha=randint(1, 10), error=e if e else '')
 
 
 @app.route('/register', methods=['POST'])
-def register():
+def flask_register():
   username = request.form.get('name')
   password = request.form.get('password')
   check = request.form.get('check')
@@ -107,7 +114,7 @@ def register():
 
 
 @app.route('/login', methods=['POST'])
-def login():
+def flask_login():
   username = request.form.get('name')
   password = request.form.get('password')
   uix = dbHandler.logInUser(username, password)
@@ -120,8 +127,33 @@ def login():
   return resp
 
 
+@app.route('/create', methods=['POST'])
+def flask_createServer():
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return redirect('/sign')
+  serverName = request.form.get('name')
+  serverCode = request.form.get('code')
+  if not serverName or not serverCode: return redirect('/')
+  dbHandler.addServer(serverName, serverCode, data['uix'])
+  return redirect('/')
+
+
+@app.route('/join', methods=['POST'])
+def flask_joinServer():
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return redirect('/sign')
+  serverCode = request.form.get('code')
+  if not serverCode: return redirect('/')
+  dbHandler.userJoinServer(data['uix'], serverCode)
+  return redirect('/')
+
+
 @app.route('/chat')
-def chat():
+def flask_chat():
   name = session.get('name')
   code = session.get('room')
   if not name or not code or not code in chatrooms:
@@ -130,19 +162,19 @@ def chat():
 
 
 @app.route('/favicon.ico')
-def favicon():
+def flask_favicon():
   return send_from_directory(path.join(app.root_path, 'static/icon'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
 @app.route('/', methods=['GET', 'POST'])
-def index():
+def flask_index():
   if request.method == 'GET':
     JWT_token = request.cookies.get('JWT_token')
     JWT_user_context = request.cookies.get('JWT_user_context')
-    if JWT_token is None or JWT_user_context is None:
-      return redirect('/sign')
-    i, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
-    return render_template('index.html')
+    isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+    if not isAuthentic: return redirect('/sign')
+    userServers = dbHandler.getUserServers(data['uix'])
+    return render_template('index.html', serverList=userServers, serverCount=len(userServers))
   else:
     name = request.form.get('name')
     join = True if request.form.get('join') == 'yes' else False

@@ -185,13 +185,15 @@ def addServer(name: str, roomcode: str, ownerix: int) -> bool:
     cursor = db.cursor()
     # Table for users
     cursor.execute('INSERT INTO servers(name, code, owner) VALUES(?, ?, ?);', (name, roomcode, ownerix))
+    db.commit()
     userJoinServer(ownerix, roomcode)
+    return True
   except sqlite3.Error as e:
     logger.log(f'An error in SQL syntax occurred while adding server; Error message: {e}')
   except Exception as e:
     logger.log(f'An unexpected error occurred while adding server; Error message: {e}')
   db.commit()
-  return True
+  return False
 
 
 def checkIfCodeExists(roomcode: str) -> bool:
@@ -340,7 +342,7 @@ def userJoinServer(uix: int, roomcode: str) -> bool:
     cursor = db.cursor()
     six = getServerId(roomcode)
     if not isUserInServer(uix, six):
-      cursor.execute('INSERT INTO userServerMember(userId, serverId) VALUES (?, ?))', (uix, six))
+      cursor.execute('INSERT INTO userServerMember(userId, serverId) VALUES (?, ?)', (uix, six))
   except sqlite3.Error as e:
     logger.log(f'An error in SQL syntax occurred while user({uix}) tried joining server({six}); Error message: {e}')
   except Exception as e:
@@ -450,6 +452,21 @@ def eraseServerHistory(roomcode: str) -> True:
     logger.log(f'An unexpected error occurred while erasing server history; Error message: {e}')
   db.commit()
   return True
+
+
+def getUserServers(uix: int) -> list[tuple[str, str]]:
+  try:
+    db = sqlite3.connect(DBLOCATION)
+    cursor = db.cursor()
+    res = cursor.execute('SELECT servers.name, servers.code FROM servers INNER JOIN userServerMember ON userServerMember.serverId=servers.id WHERE userServerMember.userId=?', (uix,))
+    res = res.fetchall()
+    return res
+  except sqlite3.Error as e:
+    logger.log(f'An error in SQL syntax occurred while getting user servers; Error message: {e}')
+  except Exception as e:
+    logger.log(f'An unexpected error occurred while getting user servers; Error message: {e}')
+  db.commit()
+  return []
 
 
 #REMOVE FROM FINAL VERSION

@@ -2,31 +2,34 @@
 {% block childCSS %}<link rel="stylesheet" href='{{ url_for("static", filename="styles/index.css") }}'>
 <script src='{{ url_for("static", filename="scripts/index.js") }}'></script>{% endblock %}
 {% block content %}
-<h1>Welcome to chat app</h1>
-{% if error %}
-<p id="error">{{error}}</p>
-{% endif %}
-<div>
-  <form action="/" method="post">
-    <input type="hidden" name="roomOrServer" value="room">
-    <label for="name">Enter your name: </label>
-    <input type="text" id="name" name="name" placeholder="Name"><br>
-    <input type="checkbox" name="join" id="join" value="yes" onclick="showCode()">
-    <label for="join">Join an existing room? </label><br>
-    <label for="code" id="codelabel" style="display: none;">Code: </label>
-    <input type="text" id="code" name="code" placeholder="eg. eb7f51" style="display: none;"><br>
-    <input type="submit" value="Go chat!">
+<div class="forms">
+  <form action="/create" method="post">
+    <h3>Create a server</h3>
+    <label for="name">Server name</label>
+    <input type="text" name="name" id="name">
+    <label for="code">Join code</label>
+    <input type="text" name="code" id="code" onchange="codeInUse();">
+    <input type="submit" value="Create!">
   </form>
-  <form action="/" method="post">
-    <input type="hidden" name="roomOrServer" value="server">
-    <label for="name">SERVER CREATION </label>
-    <input type="text" id="name" name="name" placeholder="Name"><br>
-    <input type="checkbox" name="join" id="join" value="yes" onclick="showCode()">
-    <label for="join">Join an existing room? </label><br>
-    <label for="code" id="codelabel" style="display: none;">Code: </label>
-    <input type="text" id="code" name="code" placeholder="eg. eb7f51" style="display: none;"><br>
-    <input type="submit" value="Go chat!">
+  <form action="/join" method="post">
+    <h3>Join a server</h3>
+    <label for="code">Join code</label>
+    <input type="text" name="code" id="jcode">
+    <input type="submit" value="Join!">
   </form>
 </div>
-<a href="/sign">SIGN</a>
+<div class="servers">
+  <h2>Your servers</h2>
+  <div class="serverList">
+    {% for i in range(serverCount) %}
+      <a href="/chat/{{serverList[i][1]}}">{{serverList[i][0]}}</a>
+    {% endfor %}
+  </div>
+</div>
+<div class="accountmgmt">
+  <form action="/delete" method="post">
+    <input type="submit" value="Delete account" id="delete">
+    <p>Warning! Deleting your account will result in deletion of any servers you own as well.</p>
+  </form>
+</div>
 {% endblock %}
