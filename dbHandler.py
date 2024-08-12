@@ -92,6 +92,25 @@ def getUserPrivilege(ix: int) -> int:
   return -1
 
 
+# Get a privLevel associated with userId, returns privLevel (or -1 if fail)
+def getUsername(ix: int) -> str:
+  try:
+    db = sqlite3.connect(DBLOCATION)
+    cursor = db.cursor()
+    res1 = cursor.execute('SELECT username FROM users WHERE id = ?;', (ix,))
+    res1 = res1.fetchone()
+    db.commit()
+    if res1:
+      return res1[0]
+    logger.log(f'Couldn\'t find row while checking for a privilege level; Error message: {e}; Data: {(ix)}', 2)
+  except sqlite3.Error as e:
+    logger.log(f'An error in SQL syntax occurred while checking for a privilege level; Error message: {e}; Data: {(ix)}')
+  except Exception as e:
+    logger.log(f'An unexpected error occurred while checking for a privilege level; Error message: {e}')
+  db.commit()
+  return -1
+
+
 # Return True if Username was found in table
 def checkIfUsernameExists(username: str) -> bool:
   try:
@@ -311,6 +330,7 @@ def addMessage(roomcode: str, message: dict) -> bool:
   return True
 
 
+# Return message, sender, time
 def getMessages(roomcode: str) -> list[tuple[str, str, str]]:
   try:
     if (not checkIfCodeExists(roomcode)):
@@ -366,7 +386,7 @@ def userLeaveServer(uix: int, roomcode: str) -> True:
   return True
 
 
-def isUserInServer(uix: int, six: str) -> bool:
+def isUserInServer(uix: int, six: int) -> bool:
   try:
     db = sqlite3.connect(DBLOCATION)
     cursor = db.cursor()
