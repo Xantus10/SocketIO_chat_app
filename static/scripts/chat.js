@@ -35,8 +35,8 @@ function sendMessage() {
 }
 
 
-// When user presses enter we send the message
 window.addEventListener("DOMContentLoaded", function (event) {
+  // When user presses enter we send the message
   document.getElementById('message').addEventListener('keyup', function (event) {
     event.preventDefault();
     if (event.key === "Enter") {

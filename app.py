@@ -15,18 +15,8 @@ myjwt = JWT()
 myjwt.set_secret_key('N*YV$%NY*#4vJWKRQOcnqvb3v$N37]85n&#583?vNT583#`Yv83')
 
 
-chatrooms = {}
-
-
-def getRoomCode():
-  while True:
-    code = token_hex(3)
-    if not code in chatrooms.keys():
-      return code
-
-
 def createMessage(sender='', message=''):
-  return {'sender': sender, 'message': message, 'time': datetime.now().strftime('%-d. %-m. %Y %H:%M')}
+  return {'sender': sender, 'message': message, 'time': datetime.now().strftime('%d. %m. %Y %H:%M')}
 
 
 def checkCaptcha(captchaNum: int, captchaInp: str):
@@ -37,44 +27,43 @@ def checkCaptcha(captchaNum: int, captchaInp: str):
 
 @socketioApp.on("connect")
 def io_connect(_):
-  name = session.get('name')
-  code = session.get('room')
-  if name is None or code is None:
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return
+  code = session.get('code')
+  if not code:
     return
-  if not code in chatrooms:
+  if not dbHandler.checkIfCodeExists(code):
     leave_room(code)
   join_room(code)
-  msg = createMessage('', f"{name} has joined the room!")
-  send(msg, to=code)
-  emit("Dis/Connect", {'change': "+"}, to=code)
-  chatrooms[code]['members'] += 1
-  chatrooms[code]['messages'].append(msg)
+  #emit("Dis/Connect", {'change': "+"}, to=code)
 
 
 @socketioApp.on("message")
 def io_message(message):
-  name = session.get('name')
-  code = session.get('room')
-  if name is None or code is None or not code in chatrooms:
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return
+  code = session.get('code')
+  if not code or not dbHandler.checkIfCodeExists(code):
     return
-  msg = createMessage(name, message['message'])
+  msg = createMessage(dbHandler.getUsername(data['uix']), message['message'])
   send(msg, to=code)
-  chatrooms[code]['messages'].append(msg)
+  dbHandler.addMessage(code, msg)
 
 
 @socketioApp.on("disconnect")
 def io_disconnect():
-  name = session.get('name')
-  code = session.get('room')
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return
+  code = session.get('code')
+  if not code:
+    return
   leave_room(code)
-  if code in chatrooms:
-    chatrooms[code]['members'] -= 1
-    msg = createMessage('', f"{name} has left the room!")
-    send(msg, to=code)
-    emit("Dis/Connect", {'change': "-"}, to=code)
-    chatrooms[code]['messages'].append(msg)
-    if chatrooms[code]['members'] <= 0:
-      del chatrooms[code]
 
 
 # Used on sign page to check for username
@@ -93,6 +82,7 @@ def io_checkCodeInUse(data):
 
 @app.route('/sign')
 def flask_signuporin():
+  if session.get('code'): session['code'] = ''
   e = request.args.get('e')
   return render_template('registerlogin.html', captcha=randint(1, 10), error=e if e else '')
 
@@ -152,13 +142,17 @@ def flask_joinServer():
   return redirect('/')
 
 
-@app.route('/chat')
-def flask_chat():
-  name = session.get('name')
-  code = session.get('room')
-  if not name or not code or not code in chatrooms:
-    return redirect('/')
-  return render_template('chat.html', name=name, room=code, messages=chatrooms[code]['messages'], personCount=chatrooms[code]['members']) # possibly add 1
+@app.route('/chat/<code>')
+def flask_chat(code):
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return redirect('/sign')
+  username = dbHandler.getUsername(data['uix'])
+  serverInfo = dbHandler.getServerInfo(code)
+  if not dbHandler.isUserInServer(data['uix'], serverInfo[0]): return redirect('/')
+  session['code'] = code
+  return render_template('chat.html', name=username, room=code, messages=dbHandler.getMessages(code), personCount=0) ################## PERSON COUNT FINISH
 
 
 @app.route('/favicon.ico')
@@ -166,33 +160,15 @@ def flask_favicon():
   return send_from_directory(path.join(app.root_path, 'static/icon'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route('/', methods=['GET'])
 def flask_index():
-  if request.method == 'GET':
-    JWT_token = request.cookies.get('JWT_token')
-    JWT_user_context = request.cookies.get('JWT_user_context')
-    isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
-    if not isAuthentic: return redirect('/sign')
-    userServers = dbHandler.getUserServers(data['uix'])
-    return render_template('index.html', serverList=userServers, serverCount=len(userServers))
-  else:
-    name = request.form.get('name')
-    join = True if request.form.get('join') == 'yes' else False
-    code = request.form.get('code')
-    if not name:
-      return render_template('index.html', error='Please enter a name!')
-    if join:
-      if not code:
-        return render_template('index.html', error='Please enter a code!')
-      if not code in chatrooms:
-        return render_template('index.html', error='Invalid code!')
-      roomCode = code
-    else:
-      roomCode = getRoomCode()
-      chatrooms[roomCode] = {'members': 0, 'messages': []}
-    session['name'] = name
-    session['room'] = roomCode
-    return redirect('/chat')
+  if session.get('code'): session['code'] = ''
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return redirect('/sign')
+  userServers = dbHandler.getUserServers(data['uix'])
+  return render_template('index.html', serverList=userServers, serverCount=len(userServers))
 
 
 def main():
