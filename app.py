@@ -49,7 +49,7 @@ def io_message(message):
   code = session.get('code')
   if not code or not dbHandler.checkIfCodeExists(code):
     return
-  msg = createMessage(dbHandler.getUsername(data['uix']), message['message'])
+  msg = createMessage(data['username'], message['message'])
   send(msg, to=code)
   dbHandler.addMessage(code, msg)
 
@@ -110,7 +110,7 @@ def flask_login():
   uix = dbHandler.logInUser(username, password)
   if uix == -1: return redirect('/sign?e=Incorrect username or password')
   resp = make_response(redirect('/'))
-  data = {'uix': uix}
+  data = {'uix': uix, 'username': username}
   JWT_token, JWT_user_context = myjwt.jwtencode(data)
   resp.set_cookie('JWT_token', JWT_token)
   resp.set_cookie('JWT_user_context', JWT_user_context, httponly=True, samesite='Strict')
@@ -169,7 +169,7 @@ def flask_chat(code):
   JWT_user_context = request.cookies.get('JWT_user_context')
   isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
   if not isAuthentic: return redirect('/sign')
-  username = dbHandler.getUsername(data['uix'])
+  username = data['username']
   serverInfo = dbHandler.getServerInfo(code)
   if not dbHandler.isUserInServer(data['uix'], serverInfo[0]): return redirect('/')
   session['code'] = code
