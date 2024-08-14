@@ -296,22 +296,6 @@ def getServerId(roomcode: str) -> int:
   return -1
 
 
-def handleExcessiveMessages(serverix: int) -> True:
-  try:
-    db = sqlite3.connect(DBLOCATION)
-    cursor = db.cursor()
-    res = cursor.execute('SELECT id FROM messages WHERE serverId = ? ORDER BY id ASC;', (serverix,))
-    res = res.fetchall()
-    if len(res) > 100:
-      cursor.execute('DELETE FROM messages WHERE id = ?', (res[0][0],))
-  except sqlite3.Error as e:
-    logger.log(f'An error in SQL syntax occurred while handling exc message; Error message: {e}')
-  except Exception as e:
-    logger.log(f'An unexpected error occurred while handling exc message; Error message: {e}')
-  db.commit()
-  return True
-
-
 # Message format: {'message': '', 'sender': '', 'time': ''}
 def addMessage(roomcode: str, message: dict) -> bool:
   try:
@@ -322,6 +306,10 @@ def addMessage(roomcode: str, message: dict) -> bool:
     cursor = db.cursor()
     ix = getServerId(roomcode)
     cursor.execute('INSERT INTO messages(message, sender, time, serverId) VALUES(?, ?, ?, ?);', (message['message'], message['sender'], message['time'], ix))
+    res = cursor.execute('SELECT id FROM messages WHERE serverId = ? ORDER BY id ASC;', (ix,))
+    res = res.fetchall()
+    if len(res) > 100:
+      cursor.execute('DELETE FROM messages WHERE id = ?', (res[0][0],))
   except sqlite3.Error as e:
     logger.log(f'An error in SQL syntax occurred while adding message; Error message: {e}')
   except Exception as e:
