@@ -130,6 +130,27 @@ def flask_createServer():
   return redirect('/')
 
 
+@app.route('/logout', methods=['POST'])
+def flask_logout():
+  resp = make_response(redirect('/sign'))
+  resp.set_cookie('JWT_token', '', expires=0)
+  resp.set_cookie('JWT_user_context', '', expires=0)
+  return resp
+
+
+@app.route('/delete', methods=['POST'])
+def flask_deleteAccount():
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return redirect('/sign')
+  dbHandler.removeUser(data['uix'])
+  resp = make_response(redirect('/sign'))
+  resp.set_cookie('JWT_token', '', expires=0)
+  resp.set_cookie('JWT_user_context', '', expires=0)
+  return resp
+
+
 @app.route('/join', methods=['POST'])
 def flask_joinServer():
   JWT_token = request.cookies.get('JWT_token')

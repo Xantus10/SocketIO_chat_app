@@ -175,7 +175,7 @@ def removeUser(ix: int) -> True:
     user = user.fetchone()
     if user:
       # First remove user's servers
-      res = cursor.execute('SELECT roomcode FROM servers WHERE owner = ?', (ix,))
+      res = cursor.execute('SELECT code FROM servers WHERE owner = ?', (ix,))
       res = res.fetchall()
       for server in res: removeServer(server[0])
       # Second remove userServer rels.
@@ -243,7 +243,7 @@ def removeServer(roomcode: str) -> True:
       # 1st remove all messages
       cursor.execute('DELETE FROM messages WHERE serverId = ?', (six,))
       # Then remove all user-server rels.
-      cursor.execute('DELETE FROM userServerRelations WHERE serverId = ?', (six,))
+      cursor.execute('DELETE FROM userServerMember WHERE serverId = ?', (six,))
       # Finally remove server
       cursor.execute('DELETE FROM servers WHERE id = ?', (six,))
     else:

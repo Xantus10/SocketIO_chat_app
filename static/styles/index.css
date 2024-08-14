@@ -74,6 +74,12 @@ div.accountmgmt {
   background-color: rgb(255, 40, 40) !important;
 }
 
+#delete-form {
+  border: 2px black solid;
+  margin-top: 20px;
+  text-align: center;
+}
+
 form > * {
   margin-bottom: 6px;
 }
