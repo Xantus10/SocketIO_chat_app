@@ -15,7 +15,7 @@ def initialize() -> True:
     # Table for users
     cursor.execute('CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT NOT NULL UNIQUE, salt TEXT NOT NULL, password TEXT NOT NULL, privilegeLevel INT NOT NULL);')
     cursor.execute('CREATE TABLE IF NOT EXISTS userServerMember(id INTEGER PRIMARY KEY AUTOINCREMENT, userId INTEGER NOT NULL, serverId INTEGER NOT NULL, CONSTRAINT FK_userId FOREIGN KEY(userId) REFERENCES users(id), CONSTRAINT FK_serverId FOREIGN KEY(serverId) REFERENCES servers(id));')
-    cursor.execute('CREATE TABLE IF NOT EXISTS servers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, code TEXT NOT NULL UNIQUE, owner INT NOT NULL, CONSTRAINT FK_owner FOREIGN KEY(owner) REFERENCES users(id));')
+    cursor.execute('CREATE TABLE IF NOT EXISTS servers(id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT NOT NULL, code TEXT NOT NULL UNIQUE, owner INT NOT NULL, online INT DEFAULT 0, CONSTRAINT FK_owner FOREIGN KEY(owner) REFERENCES users(id));')
     cursor.execute('CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY AUTOINCREMENT, message TEXT NOT NULL, sender TEXT NOT NULL, time TEXT NOT NULL, serverId INTEGER NOT NULL, CONSTRAINT FK_serverId FOREIGN KEY(serverId) REFERENCES servers(id));')
   except sqlite3.Error as e:
     logger.log('An error in SQL syntax occurred while initializing tables')
@@ -468,6 +468,7 @@ def getUserServers(uix: int) -> list[tuple[str, str]]:
     cursor = db.cursor()
     res = cursor.execute('SELECT servers.name, servers.code FROM servers INNER JOIN userServerMember ON userServerMember.serverId=servers.id WHERE userServerMember.userId=?', (uix,))
     res = res.fetchall()
+    db.commit()
     return res
   except sqlite3.Error as e:
     logger.log(f'An error in SQL syntax occurred while getting user servers; Error message: {e}')
@@ -477,12 +478,30 @@ def getUserServers(uix: int) -> list[tuple[str, str]]:
   return []
 
 
-#REMOVE FROM FINAL VERSION
-def selectall(): # Used for displaying data REMOVE FROM FINAL VERSION
-  db = sqlite3.connect(DBLOCATION) #REMOVE FROM FINAL VERSION
-  cursor = db.cursor()#REMOVE FROM FINAL VERSION
-  res1 = cursor.execute('SELECT * FROM users;')#REMOVE FROM FINAL VERSION
-  res1 = res1.fetchall()#REMOVE FROM FINAL VERSION
-  db.commit()#REMOVE FROM FINAL VERSION
-  return res1#REMOVE FROM FINAL VERSION
-#REMOVE FROM FINAL VERSION
+def getOnlineCount(code: str) -> int:
+  try:
+    db = sqlite3.connect(DBLOCATION)
+    cursor = db.cursor()
+    res = cursor.execute('SELECT online FROM servers WHERE code=?', (code,))
+    res = res.fetchone()
+    db.commit()
+    return res[0]
+  except sqlite3.Error as e:
+    logger.log(f'An error in SQL syntax occurred while getting server online count; Error message: {e}')
+  except Exception as e:
+    logger.log(f'An unexpected error occurred while getting server online count; Error message: {e}')
+  db.commit()
+  return -1
+
+
+def changeOnlineCount(code: str, change: str) -> True:
+  try:
+    db = sqlite3.connect(DBLOCATION)
+    cursor = db.cursor()
+    cursor.execute(f'UPDATE servers SET online=online{"+1" if change=="+" else "-1"} WHERE code = ?;', (code,))
+  except sqlite3.Error as e:
+    logger.log(f'An error in SQL syntax occurred while changing online count; Error message: {e}; Data: {(code)}')
+  except Exception as e:
+    logger.log(f'An unexpected error occurred while changing online count; Error message: {e}')
+  db.commit()
+  return True

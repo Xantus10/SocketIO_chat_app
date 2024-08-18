@@ -37,7 +37,8 @@ def io_connect(_):
   if not dbHandler.checkIfCodeExists(code):
     leave_room(code)
   join_room(code)
-  #emit("Dis/Connect", {'change': "+"}, to=code)
+  dbHandler.changeOnlineCount(code, '+')
+  emit("Dis/Connect", {'change': "+"}, to=code)
 
 
 @socketioApp.on("message")
@@ -64,6 +65,8 @@ def io_disconnect():
   if not code:
     return
   leave_room(code)
+  dbHandler.changeOnlineCount(code, '-')
+  emit("Dis/Connect", {'change': "-"}, to=code)
 
 
 # Used on sign page to check for username
@@ -173,7 +176,7 @@ def flask_chat(code):
   serverInfo = dbHandler.getServerInfo(code)
   if not dbHandler.isUserInServer(data['uix'], serverInfo[0]): return redirect('/')
   session['code'] = code
-  return render_template('chat.html', name=username, room=code, messages=dbHandler.getMessages(code), personCount=0) ################## PERSON COUNT FINISH
+  return render_template('chat.html', name=username, room=code, messages=dbHandler.getMessages(code), personCount=dbHandler.getOnlineCount(code))
 
 
 @app.route('/favicon.ico')
