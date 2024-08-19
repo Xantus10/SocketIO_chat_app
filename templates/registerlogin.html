@@ -7,6 +7,7 @@
 {% endif %}
 <div class="forms-side">
   <form action="/login" method="post">
+    <h2>Login</h2>
     <label for="lname">Username: </label>
     <input type="text" id="lname" name="name" placeholder="Username"><br>
     <label for="lpassword">Password: </label>
@@ -14,12 +15,13 @@
     <input type="submit" value="Login">
   </form>
   <form action="/register" method="post">
+    <h2>Register</h2>
     <label for="name">Username: </label>
-    <input type="text" id="name" name="name" placeholder="Username" onchange="usernameInUse();"><br>
+    <input type="text" id="name" name="name" placeholder="Username" onchange="usernameInUse();" maxlength="50"><br>
     <label for="password">Password: </label>
-    <input type="password" id="password" name="password" placeholder="*****" onchange="passwordCheck();"><br>
+    <input type="password" id="password" name="password" placeholder="*****" onchange="passwordCheck();" maxlength="50"><br>
     <label for="check">Password again: </label>
-    <input type="password" id="check" name="check" placeholder="*****" onchange="passwordCheck();"><br>
+    <input type="password" id="check" name="check" placeholder="*****" onchange="passwordCheck();" maxlength="50"><br>
     <img src='{{ url_for("static", filename="captcha/" + (captcha|string) + ".jpg") }}' alt="captcha">
     <input type="hidden" name="captcha" id="captcha" value="{{captcha}}">
     <input type="text" name="captchainp" id="captchainp" placeholder="Enter code from captcha image">

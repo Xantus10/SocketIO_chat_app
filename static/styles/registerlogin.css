@@ -31,3 +31,18 @@ input[type="text"], input[type="password"] {
 #passp {
   color: rgb(165, 0, 0);
 }
+
+h2 {
+  margin: 6px 0px 12px 0px;
+}
+
+
+/* Responsivity */
+
+@media (max-width: 1000px) {
+  div.forms-side {
+    flex-direction: column;
+    gap: 40px;
+  }
+}
+

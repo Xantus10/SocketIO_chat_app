@@ -6,9 +6,9 @@
   <form action="/create" method="post">
     <h3>Create a server</h3>
     <label for="name">Server name</label>
-    <input type="text" name="name" id="name">
+    <input type="text" name="name" id="name" maxlength="50">
     <label for="code">Join code</label>
-    <input type="text" name="code" id="code" onchange="codeInUse();">
+    <input type="text" name="code" id="code" onchange="codeInUse();" maxlength="50">
     <input type="submit" value="Create!">
   </form>
   <form action="/join" method="post">

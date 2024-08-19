@@ -94,7 +94,7 @@ label {
 
   #online {
     right: 5px;
-    flex-direction: column;
+    flex-direction: row;
     align-items: flex-end;
     font-size: 14px;
   }
@@ -104,7 +104,7 @@ label {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   div.container {
     width: 90%;
     gap: 20px;
@@ -125,9 +125,9 @@ label {
 
   #online {
     right: 30px;
-    flex-direction: row;
     align-items: center;
     position: absolute;
+    top: 70px;
   }
 
   #onlineCount {

@@ -57,17 +57,24 @@ div.serverList {
 
 div.serverList a {
   text-decoration: none;
+  color: lightblue !important;
   padding: 7px;
+  padding-left: 30px;
   width: 85%;
   margin: 3px 0px 3px 20px;
   border: 1px solid black;
   border-radius: 25px;
-  background-color: gray;
+  background-color: #555555;
 }
 
 
 div.accountmgmt {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 20px;
 }
 
 #delete {
@@ -76,10 +83,46 @@ div.accountmgmt {
 
 #delete-form {
   border: 2px black solid;
-  margin-top: 20px;
   text-align: center;
+  width: min-content;
 }
 
 form > * {
   margin-bottom: 6px;
+}
+
+
+/* Responsivity */
+
+@media (max-width: 900px) {
+  div.container {
+    flex-direction: column;
+  }
+
+  div.servers {
+    order: 1;
+  }
+
+  div.forms {
+    order: 2;
+    flex-direction: row;
+  }
+
+  div.accountmgmt {
+    order: 3;
+    flex-direction: row;
+    justify-content: space-around;
+  }
+}
+
+
+@media (max-width: 600px) {
+  div.forms {
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  div.accountmgmt {
+    flex-direction: column;
+  }
 }
