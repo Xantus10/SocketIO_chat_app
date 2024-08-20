@@ -2,17 +2,20 @@ from flask import Flask, render_template, request, send_from_directory, redirect
 from flask_socketio import SocketIO, join_room, leave_room, send, emit
 from os import path
 from secrets import token_hex
-from datetime import datetime
+from datetime import datetime, timedelta
 from random import randint
 
 import dbHandler
 from MyJWT import JWT
 
+
+COOKIEEXPIRYSECONDS = 100 #7 * 24 * 3600 # 7 days
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vn^F8t*#klq3P0(mE6W{9!`l>GU5N$e8'
 socketioApp  = SocketIO(app)
 myjwt = JWT()
 myjwt.set_secret_key('N*YV$%NY*#4vJWKRQOcnqvb3v$N37]85n&#583?vNT583#`Yv83')
+myjwt.set_expires(COOKIEEXPIRYSECONDS)
 
 
 def createMessage(sender='', message=''):
@@ -115,8 +118,9 @@ def flask_login():
   resp = make_response(redirect('/'))
   data = {'uix': uix, 'username': username}
   JWT_token, JWT_user_context = myjwt.jwtencode(data)
-  resp.set_cookie('JWT_token', JWT_token)
-  resp.set_cookie('JWT_user_context', JWT_user_context, httponly=True, samesite='Strict')
+  expires = datetime.now() + timedelta(seconds=COOKIEEXPIRYSECONDS)
+  resp.set_cookie('JWT_token', JWT_token, expires=expires)
+  resp.set_cookie('JWT_user_context', JWT_user_context, httponly=True, samesite='Strict', expires=expires)
   return resp
 
 
