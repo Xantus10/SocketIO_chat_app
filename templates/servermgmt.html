@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block childCSS %}<link rel="stylesheet" href='{{ url_for("static", filename="styles/servermgmt.css") }}'>{% endblock %}
+{% block content %}
+<div class="forms">
+<form action="/mgmt/{{code}}/erase" method="post"><input type="submit" value="Erase messages"></form>
+<form action="/mgmt/{{code}}/owner" method="post">
+  <h2>Change server owner</h2>
+  <label for="new">New owner username:</label>
+  <input type="text" name="new" id="new">
+  <input type="submit" value="Change!">
+</form>
+<form action="/mgmt/{{code}}/delete" method="post"><input type="submit" value="Delete server" id="delete"></form>
+</div>
+{% endblock %}
