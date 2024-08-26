@@ -55,18 +55,36 @@ div.serverList {
   align-items: center;
 }
 
-div.serverList a {
-  text-decoration: none;
-  color: lightblue !important;
-  padding: 7px;
-  padding-left: 30px;
+div.serverList > div {
   width: 85%;
   margin: 3px 0px 3px 20px;
   border: 1px solid black;
   border-radius: 25px;
   background-color: #555555;
+  display: flex;
+  flex-direction: row;
 }
 
+div.serverList > div > a {
+  text-decoration: none !important;
+  color: lightblue !important;
+  padding: 7px;
+  padding-left: 30px;
+  border: 1px solid transparent;
+  border-radius: 25px;
+}
+
+div.serverList > div > a:hover {
+  background-color: #777777;
+}
+
+div.serverList > div > a:nth-child(1) {
+  flex: 7;
+}
+
+div.serverList > div > a:nth-child(2) {
+  flex: 3;
+}
 
 div.accountmgmt {
   flex: 1;
@@ -124,5 +142,9 @@ form > * {
 
   div.accountmgmt {
     flex-direction: column;
+  }
+
+  div.serverList > div {
+    width: 95%;
   }
 }

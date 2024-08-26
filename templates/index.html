@@ -22,7 +22,10 @@
   <h2>Your servers</h2>
   <div class="serverList">
     {% for i in range(serverCount) %}
-      <a href="/chat/{{serverList[i][1]}}">{{serverList[i][0]}}</a>
+      <div>
+        <a href="/chat/{{serverList[i][1]}}">{{serverList[i][0]}}</a>
+        <a href="/mgmt/{{serverList[i][1]}}">Manage</a>
+      </div>
     {% endfor %}
   </div>
 </div>
