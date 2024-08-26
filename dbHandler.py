@@ -418,9 +418,9 @@ def getUixFromUsername(username: str) -> int:
     cursor = db.cursor()
     # If username is in users
     res1 = cursor.execute('SELECT id FROM users WHERE username = ?;', (username,))
-    res1 = res1.fetchall()
+    res1 = res1.fetchone()
     db.commit()
-    return res1
+    return res1[0]
   except sqlite3.Error as e:
     logger.log(f'An error in SQL syntax occurred while getting uix from username; Error message: {e}; Data: {(username)}')
   except Exception as e:
@@ -436,7 +436,7 @@ def changeServerOwner(newOwnerName: str, roomcode: str) -> bool:
     ownerix = getUixFromUsername(newOwnerName)
     if ownerix == -1:
       return False
-    cursor.execute('UPDATE servers SET owner=? WHERE roomcode = ?;', (ownerix, roomcode))
+    cursor.execute('UPDATE servers SET owner=? WHERE code = ?;', (ownerix, roomcode))
     db.commit()
     return True
   except sqlite3.Error as e:
