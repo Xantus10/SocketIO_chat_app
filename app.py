@@ -9,7 +9,7 @@ import dbHandler
 from MyJWT import JWT
 
 
-COOKIEEXPIRYSECONDS = 100 #7 * 24 * 3600 # 7 days
+COOKIEEXPIRYSECONDS = 7 * 24 * 3600 # 7 days
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'vn^F8t*#klq3P0(mE6W{9!`l>GU5N$e8'
 socketioApp  = SocketIO(app)
@@ -181,6 +181,50 @@ def flask_chat(code):
   if not dbHandler.isUserInServer(data['uix'], serverInfo[0]): return redirect('/')
   session['code'] = code
   return render_template('chat.html', name=username, room=code, messages=dbHandler.getMessages(code), personCount=dbHandler.getOnlineCount(code))
+
+
+@app.route('/mgmt/<code>')
+def flask_mgmt(code):
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return redirect('/sign')
+  if not dbHandler.isServerOwner(data['uix'], code): return redirect('/')
+  return render_template('servermgmt.html', code=code)
+
+
+@app.route('/mgmt/<code>/erase', methods=['POST'])
+def flask_mgmt_erase(code):
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return redirect('/sign')
+  if not dbHandler.isServerOwner(data['uix'], code): return redirect('/')
+  dbHandler.eraseServerHistory(code)
+  return redirect(f'/mgmt/{code}')
+
+
+@app.route('/mgmt/<code>/owner', methods=['POST'])
+def flask_mgmt_owner(code):
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return redirect('/sign')
+  if not dbHandler.isServerOwner(data['uix'], code): return redirect('/')
+  newOwner = request.form.get('new')
+  dbHandler.changeServerOwner(newOwner, code)
+  return redirect('/')
+
+
+@app.route('/mgmt/<code>/delete', methods=['POST'])
+def flask_mgmt_delete(code):
+  JWT_token = request.cookies.get('JWT_token')
+  JWT_user_context = request.cookies.get('JWT_user_context')
+  isAuthentic, data = myjwt.jwtdecode(JWT_token, JWT_user_context)
+  if not isAuthentic: return redirect('/sign')
+  if not dbHandler.isServerOwner(data['uix'], code): return redirect('/')
+  dbHandler.removeServer(code)
+  return redirect('/')
 
 
 @app.route('/favicon.ico')
