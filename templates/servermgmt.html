@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block childCSS %}<link rel="stylesheet" href='{{ url_for("static", filename="styles/servermgmt.css") }}'>{% endblock %}
 {% block content %}
+<a href="/" id="back">Back</a>
 <div class="forms">
 <form action="/mgmt/{{code}}/erase" method="post"><input type="submit" value="Erase messages"></form>
 <form action="/mgmt/{{code}}/owner" method="post">
